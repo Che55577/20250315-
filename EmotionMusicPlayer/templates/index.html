@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情緒音樂播放器</title>
+</head>
+<body>
+    <h1>歡迎來到情緒音樂播放器</h1>
+    <button onclick="detectEmotion()">偵測情緒並播放音樂</button>
+    <p id="result"></p>
+    <iframe id="musicPlayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
+
+    <script>
+        function detectEmotion() {
+            fetch('/detect')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerText = "偵測到情緒：" + data.emotion;
+                    if (data.music) {
+                        document.getElementById('musicPlayer').src = data.music.replace("watch?v=", "embed/");
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
