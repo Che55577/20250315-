@@ -4,24 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>情緒音樂播放器</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body>
-    <h1>歡迎來到情緒音樂播放器</h1>
-    <button onclick="detectEmotion()">偵測情緒並播放音樂</button>
-    <p id="result"></p>
-    <iframe id="musicPlayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
-
+<body class="bg-light text-center">
+    <div class="container mt-5">
+        <h1 class="mb-4">🎵 情緒音樂播放器 🎵</h1>
+        
+        <!-- 表情符號選擇 -->
+        <div class="mb-4">
+            <h3>選擇您的心情：</h3>
+            <button class="btn btn-outline-primary emotion-btn" data-emotion="angry">😡 憤怒</button>
+            <button class="btn btn-outline-warning emotion-btn" data-emotion="annoyed">😤 煩躁</button>
+            <button class="btn btn-outline-secondary emotion-btn" data-emotion="sad">😢 憂鬱</button>
+            <button class="btn btn-outline-success emotion-btn" data-emotion="happy">😊 開心</button>
+            <button class="btn btn-outline-danger emotion-btn" data-emotion="ecstatic">🤩 欣喜若狂</button>
+        </div>
+        
+        <!-- 語音輸入按鈕 -->
+        <button class="btn btn-info mb-3" id="voiceInput">🎤 說出您的心情</button>
+        
+        <!-- 臉部表情辨識按鈕 -->
+        <button class="btn btn-dark mb-3" id="faceDetect">📷 臉部表情偵測</button>
+        
+        <!-- 顯示偵測結果 -->
+        <p id="result" class="fs-5"></p>
+        
+        <!-- 音樂播放區 -->
+        <iframe id="musicPlayer" width="560" height="315" class="mt-3" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+    
     <script>
-        function detectEmotion() {
-            fetch('/detect')
+        // 表情符號點擊事件
+        $(".emotion-btn").click(function() {
+            let emotion = $(this).data("emotion");
+            fetch(`/get_music?emotion=${emotion}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('result').innerText = "偵測到情緒：" + data.emotion;
+                    $("#result").text("偵測到情緒: " + data.emotion);
                     if (data.music) {
-                        document.getElementById('musicPlayer').src = data.music.replace("watch?v=", "embed/");
+                        $("#musicPlayer").attr("src", data.music.replace("watch?v=", "embed/"));
                     }
                 });
-        }
+        });
+        
+        // Google 語音識別
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "zh-TW";
+        
+        $("#voiceInput").click(function() {
+            $("#result").text("正在聆聽...");
+            recognition.start();
+        });
+        
+        recognition.onresult = function(event) {
+            let speechResult = event.results[0][0].transcript;
+            $("#result").text("語音識別結果: " + speechResult);
+            
+            // 發送到後端解析情緒
+            fetch(`/voice_emotion?text=${speechResult}`)
+                .then(response => response.json())
+                .then(data => {
+                    $("#result").text("偵測到情緒: " + data.emotion);
+                    if (data.music) {
+                        $("#musicPlayer").attr("src", data.music.replace("watch?v=", "embed/"));
+                    }
+                });
+        };
+        
+        // 臉部表情偵測按鈕
+        $("#faceDetect").click(function() {
+            $("#result").text("正在偵測臉部表情...");
+            fetch(`/detect_face`)
+                .then(response => response.json())
+                .then(data => {
+                    $("#result").text("偵測到表情: " + data.emotion);
+                    if (data.music) {
+                        $("#musicPlayer").attr("src", data.music.replace("watch?v=", "embed/"));
+                    }
+                });
+        });
     </script>
 </body>
 </html>
