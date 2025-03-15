@@ -1,0 +1,16 @@
+# GUI 介面設定
+def main():
+    window = tk.Tk()
+    window.title("情緒化音樂播放器")
+    window.geometry("400x200")
+
+    label = tk.Label(window, text="嘿，您今天心情如何？", font=("Arial", 16))
+    label.pack(pady=20)
+
+    start_button = tk.Button(window, text="開始使用", font=("Arial", 14), command=detect_emotion)
+    start_button.pack(pady=10)
+
+    window.mainloop()
+
+if __name__ == "__main__":
+    main()
