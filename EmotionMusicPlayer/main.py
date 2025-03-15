@@ -5,6 +5,7 @@ import yt_dlp
 import os
 import googletrans
 from textblob import TextBlob
+import numpy as np
 
 app = Flask(__name__)
 
@@ -18,17 +19,24 @@ emotion_music = {
 }
 
 def detect_emotion():
-    cap = cv2.VideoCapture(0)  # 開啟鏡頭
+    cap = cv2.VideoCapture(0)  # 開啟攝影機
+    if not cap.isOpened():
+        return None  # 如果攝影機無法開啟，返回 None
+    
     ret, frame = cap.read()
     cap.release()
     
     if not ret:
         return None
     
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # 轉換顏色格式，確保 DeepFace 可讀取
+    frame = np.array(frame)
+    
     try:
-        result = DeepFace.analyze(frame, actions=['emotion'])
+        result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
         return result[0]['dominant_emotion']
-    except:
+    except Exception as e:
+        print("DeepFace 分析失敗：", str(e))
         return None
 
 @app.route('/')
@@ -69,3 +77,4 @@ def voice_emotion():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
