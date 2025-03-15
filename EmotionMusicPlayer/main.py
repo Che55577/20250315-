@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from deepface import DeepFace
+
 import cv2
 import yt_dlp
 import os
@@ -14,7 +15,7 @@ emotion_music = {
     "annoyed": "https://www.youtube.com/watch?v=LRP8d7hhpoQ",  # Billie Eilish - Bad Guy
     "sad": "https://www.youtube.com/watch?v=hoNb6HuNmU0",  # Adele - Someone Like You
     "happy": "https://www.youtube.com/watch?v=ZbZSe6N_BXs",  # Pharrell Williams - Happy
-    "ecstatic": "https://www.youtube.com/watch?v=3GwjfUFyY6M"  # Kool & The Gang - Celebration
+    "depressed": "https://www.youtube.com/watch?v=4N3N1MlvVc4"  # Gary Jules - Mad World (厭世)
 }
 
 def detect_emotion():
@@ -57,15 +58,17 @@ def voice_emotion():
     translated_text = translator.translate(text, dest='en').text  # 翻譯成英文分析
     sentiment = TextBlob(translated_text).sentiment.polarity
     
-    if sentiment < -0.3:
-        emotion = "sad"
-    elif -0.3 <= sentiment < 0.1:
-        emotion = "annoyed"
-    elif 0.1 <= sentiment < 0.5:
-        emotion = "happy"
+    if sentiment < -0.5:
+        emotion = "depressed"  # 極度負面 -> 厭世
+    elif -0.5 <= sentiment < -0.2:
+        emotion = "sad"  # 負面 -> 憂鬱
+    elif -0.2 <= sentiment < 0.2:
+        emotion = "annoyed"  # 中性偏負面 -> 煩躁
+    elif 0.2 <= sentiment < 0.5:
+        emotion = "happy"  # 正面 -> 開心
     else:
-        emotion = "ecstatic"
-    
+        emotion = "angry"  # 超高分數 -> 憤怒 (因為極端正向語氣可能帶有諷刺)
+
     return jsonify({"emotion": emotion, "music": emotion_music[emotion]})
 
 if __name__ == "__main__":
